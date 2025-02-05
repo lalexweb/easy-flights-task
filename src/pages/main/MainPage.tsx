@@ -3,7 +3,7 @@ import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import {Box, Button, CircularProgress, Container, FormControl, Grid2, IconButton, InputLabel, MenuItem, Pagination, Select, TextField, Typography} from '@mui/material';
 import {DatePicker} from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
-import {ChangeEvent, useEffect, useMemo, useState} from 'react';
+import {ChangeEvent, useState} from 'react';
 import {Controller, FieldValues, useForm} from 'react-hook-form';
 import {useDispatch} from 'react-redux';
 import AirportInput from '../../components/airport-input/AirportInput';
@@ -11,7 +11,7 @@ import FlightCard from '../../components/flight-card/FlightCard';
 import {useFlights, useFlightsAreLoading, useFlightsAreNotFound} from '../../store/hooks';
 import {getAllFlights} from '../../store/slices/flights-data/FlightsDataThunk';
 import {AppDispatch} from '../../store/store';
-import {Airport, GetAllFlightsParams} from '../../types/api';
+import {GetAllFlightsParams} from '../../types/api';
 import styles from './MainPage.module.scss';
 
 const pagination = 12;
@@ -27,7 +27,7 @@ const cabinClasses = [
 ];
 
 export default function MainPage() {
-  const {control, handleSubmit, reset, setValue, getValues, watch} = useForm();
+  const {control, handleSubmit, setValue, getValues, watch} = useForm();
 
   const flightsAreLoading = useFlightsAreLoading();
   const flightsAreNotFound = useFlightsAreNotFound();
@@ -37,32 +37,17 @@ export default function MainPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  const defaultValues = useMemo(
-    () => ({
-      from_airport: '',
-      travel_date: '',
-      return_date: '',
-      journey_type: '',
-      cabin_class: '',
-      adults: 1,
-    }),
-    [],
-  );
-
   const formValues = watch();
 
   const onSubmit = (values: FieldValues) => {
     if (flightsAreLoading) return;
 
-    const fromAirport: Airport = values.from_airport as Airport;
-    const toAirport: Airport = values.to_airport as Airport;
-
     const travelDate = values.travel_date ? dayjs(values.travel_date).format('YYYY-MM-DD') : '';
     const returnDate = values.return_date ? dayjs(values.return_date).format('YYYY-MM-DD') : '';
 
     const sendingData: GetAllFlightsParams = {
-      originEntityId: fromAirport?.entityId,
-      destinationEntityId: toAirport?.entityId,
+      originEntityId: values.from_airport,
+      destinationEntityId: values.to_airport,
       travelDate,
       returnDate,
       journeyType: values.journey_type,
@@ -73,7 +58,7 @@ export default function MainPage() {
     dispatch(getAllFlights(sendingData));
   };
 
-  const handleChangePage = (e: ChangeEvent<unknown>, page: number) => {
+  const handleChangePage = (_: ChangeEvent<unknown>, page: number) => {
     window.scrollTo({behavior: 'smooth', top: 0});
 
     setCurrentPage(page);
@@ -86,12 +71,6 @@ export default function MainPage() {
     setValue('to_airport', values.from_airport);
   };
 
-  useEffect(() => {
-    reset(defaultValues);
-  }, [defaultValues]);
-
-  console.log(formValues);
-
   return (
     <Container>
       <Box sx={{display: 'flex', flexDirection: 'column', my: {xs: 3, md: 10}, gap: {xs: 3, md: 10}}} className={styles.wrapper}>
@@ -102,6 +81,7 @@ export default function MainPage() {
                 <Controller
                   control={control}
                   name="journey_type"
+                  defaultValue={journeyTypes?.[0]?.value}
                   render={field => (
                     <FormControl fullWidth>
                       <InputLabel id="journeyType">Journey Type</InputLabel>
@@ -119,6 +99,7 @@ export default function MainPage() {
                 <Controller
                   control={control}
                   name="cabin_class"
+                  defaultValue={cabinClasses?.[0]?.value}
                   render={field => (
                     <FormControl fullWidth>
                       <InputLabel id="cabinClass">Cabin Class</InputLabel>
@@ -133,12 +114,12 @@ export default function MainPage() {
                   )}
                 />
 
-                <Controller control={control} name="adults" render={field => <TextField id="outlined-basic" label="Adults" variant="outlined" value={field?.field?.value} onChange={field?.field?.onChange} type="number" />} />
+                <Controller control={control} name="adults" defaultValue={1} render={field => <TextField id="outlined-basic" label="Adults" variant="outlined" value={field?.field?.value} onChange={field?.field?.onChange} type="number" />} />
               </Box>
               <Box sx={{width: '100%', display: 'flex', flexDirection: 'column', gap: 2}}>
                 <Grid2 sx={{alignItems: 'center'}} container spacing={2}>
                   <Grid2 size={5.5}>
-                    <Controller control={control} name="from_airport" rules={{required: 'Select airport, please'}} render={field => <AirportInput label="From" {...field} />} />
+                    <Controller control={control} name="from_airport" defaultValue={''} rules={{required: 'Select airport, please'}} render={field => <AirportInput label="From" {...field} />} />
                   </Grid2>
                   <Grid2 sx={{display: 'flex', justifyContent: 'center'}} size={1}>
                     <IconButton onClick={handleSwitchAirports} color="primary">
@@ -146,15 +127,15 @@ export default function MainPage() {
                     </IconButton>
                   </Grid2>
                   <Grid2 size={5.5}>
-                    <Controller control={control} name="to_airport" render={field => <AirportInput label="To" {...field} />} />
+                    <Controller control={control} name="to_airport" defaultValue={''} render={field => <AirportInput label="To" {...field} />} />
                   </Grid2>
                 </Grid2>
                 <Grid2 sx={{alignItems: 'center'}} container spacing={2}>
                   <Grid2 size={5.5}>
-                    <Controller control={control} name="travel_date" render={field => <DatePicker label="Travel Date" sx={{width: '100%'}} onChange={newValue => field.field.onChange(newValue)} />} />
+                    <Controller control={control} name="travel_date" defaultValue={''} render={field => <DatePicker label="Travel Date" sx={{width: '100%'}} onChange={newValue => field.field.onChange(newValue)} />} />
                   </Grid2>
                   <Grid2 sx={{display: 'flex', justifyContent: 'center'}} size={1} />
-                  <Grid2 size={5.5}>{formValues?.journey_type !== 'one_way' && <Controller control={control} name="return_date" render={field => <DatePicker label="Return Date" sx={{width: '100%'}} onChange={newValue => field.field.onChange(newValue)} />} />}</Grid2>
+                  <Grid2 size={5.5}>{formValues?.journey_type === 'round_trip' && <Controller control={control} name="return_date" defaultValue={''} render={field => <DatePicker label="Return Date" sx={{width: '100%'}} onChange={newValue => field.field.onChange(newValue)} />} />}</Grid2>
                 </Grid2>
               </Box>
               <Button loading={flightsAreLoading} type="submit" startIcon={<SearchIcon />} variant="contained">
