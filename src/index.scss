@@ -1,0 +1,17 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1c1d25;
+  font-family: 'Roboto';
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
