@@ -51,9 +51,9 @@ export default function AirportInput({label, field, fieldState}: AirportInputPro
         noOptionsText={debouncedInputValue && !isLoading ? 'No places found' : 'Start typing'}
         getOptionLabel={(option: Airport) => option.presentation.suggestionTitle}
         isOptionEqualToValue={(option, value) => option.entityId === value.entityId}
-        onChange={(_, value) => field.onChange(value?.entityId || '')}
+        onChange={(_, value) => field.onChange(value || '')}
         onBlur={field.onBlur}
-        value={airports.find(airport => airport.entityId === field.value) || null}
+        value={field.value || null}
         loading={isLoading}
         options={airports}
         renderInput={params => <TextField {...params} value={inputValue} onChange={handleInputChange} label={label} error={!!fieldState.error} />}

@@ -11,7 +11,7 @@ import FlightCard from '../../components/flight-card/FlightCard';
 import {useFlights, useFlightsAreLoading, useFlightsAreNotFound} from '../../store/hooks';
 import {getAllFlights} from '../../store/slices/flights-data/FlightsDataThunk';
 import {AppDispatch} from '../../store/store';
-import {GetAllFlightsParams} from '../../types/api';
+import {Airport, GetAllFlightsParams} from '../../types/api';
 import styles from './MainPage.module.scss';
 
 const pagination = 12;
@@ -39,15 +39,19 @@ export default function MainPage() {
 
   const formValues = watch();
 
+  console.log(formValues);
+
   const onSubmit = (values: FieldValues) => {
     if (flightsAreLoading) return;
 
+    const fromAirport: Airport = values.from_airport as Airport;
+    const toAirport: Airport = values.to_airport as Airport;
     const travelDate = values.travel_date ? dayjs(values.travel_date).format('YYYY-MM-DD') : '';
     const returnDate = values.return_date ? dayjs(values.return_date).format('YYYY-MM-DD') : '';
 
     const sendingData: GetAllFlightsParams = {
-      originEntityId: values.from_airport,
-      destinationEntityId: values.to_airport,
+      originEntityId: fromAirport.entityId,
+      destinationEntityId: toAirport.entityId,
       travelDate,
       returnDate,
       journeyType: values.journey_type,
